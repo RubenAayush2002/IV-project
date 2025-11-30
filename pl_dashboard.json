@@ -1,0 +1,343 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Premier League 2021-22: Team Performance Dashboard",
+  "data": {
+    "url": "premier_league_long.csv"
+  },
+
+  "params": [
+    {
+      "name": "teamParam",
+      "value": "All",
+      "bind": {
+        "input": "select",
+        "name": "Team: ",
+        "options": [
+          "All",
+          "Arsenal",
+          "Aston Villa",
+          "Brentford",
+          "Brighton",
+          "Burnley",
+          "Chelsea",
+          "Crystal Palace",
+          "Everton",
+          "Leeds",
+          "Leicester",
+          "Liverpool",
+          "Man City",
+          "Man United",
+          "Newcastle",
+          "Norwich",
+          "Southampton",
+          "Tottenham",
+          "Watford",
+          "West Ham",
+          "Wolves"
+        ]
+      }
+    },
+    {
+      "name": "startDate",
+      "value": "2021-08-13",
+      "bind": {
+        "input": "date",
+        "name": "Start date: ",
+        "min": "2021-08-13",
+        "max": "2022-05-22"
+      }
+    },
+    {
+      "name": "endDate",
+      "value": "2022-05-22",
+      "bind": {
+        "input": "date",
+        "name": "End date: ",
+        "min": "2021-08-13",
+        "max": "2022-05-22"
+      }
+    }
+  ],
+
+  "vconcat": [
+    {
+      "hconcat": [
+        {
+          "title": "Total Goals Scored per Team",
+          "width": 380,
+          "height": 300,
+          "transform": [
+            {
+              "filter": "datum.Date >= startDate && datum.Date <= endDate"
+            },
+            {
+              "filter": "teamParam == 'All' || datum.Team == teamParam"
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "sum",
+                  "field": "Goals",
+                  "as": "TotalGoals"
+                }
+              ],
+              "groupby": ["Team"]
+            }
+          ],
+          "layer": [
+            {
+              "mark": {
+                "type": "rule",
+                "strokeWidth": 2
+              },
+              "encoding": {
+                "x": {
+                  "field": "TotalGoals",
+                  "type": "quantitative",
+                  "title": "Total Goals Scored"
+                },
+                "y": {
+                  "field": "Team",
+                  "type": "nominal",
+                  "sort": {
+                    "field": "TotalGoals",
+                    "order": "descending"
+                  },
+                  "title": "Team"
+                }
+              }
+            },
+            {
+              "mark": {
+                "type": "point",
+                "filled": true,
+                "size": 200
+              },
+              "encoding": {
+                "x": {
+                  "field": "TotalGoals",
+                  "type": "quantitative"
+                },
+                "y": {
+                  "field": "Team",
+                  "type": "nominal",
+                  "sort": {
+                    "field": "TotalGoals",
+                    "order": "descending"
+                  }
+                },
+                "color": {
+                  "field": "Team",
+                  "type": "nominal",
+                  "legend": null
+                },
+                "tooltip": [
+                  { "field": "Team", "title": "Team" },
+                  { "field": "TotalGoals", "title": "Total Goals" }
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "title": "Shooting Efficiency: Shots vs Shots on Target (per Team)",
+          "width": 380,
+          "height": 300,
+          "transform": [
+            {
+              "filter": "datum.Date >= startDate && datum.Date <= endDate"
+            },
+            {
+              "filter": "teamParam == 'All' || datum.Team == teamParam"
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "mean",
+                  "field": "Shots",
+                  "as": "AvgShots"
+                },
+                {
+                  "op": "mean",
+                  "field": "ShotsOnTarget",
+                  "as": "AvgShotsOnTarget"
+                }
+              ],
+              "groupby": ["Team"]
+            }
+          ],
+          "mark": {
+            "type": "point",
+            "filled": true,
+            "size": 120
+          },
+          "encoding": {
+            "x": {
+              "field": "AvgShots",
+              "type": "quantitative",
+              "title": "Average Shots per Match"
+            },
+            "y": {
+              "field": "AvgShotsOnTarget",
+              "type": "quantitative",
+              "title": "Average Shots on Target per Match"
+            },
+            "color": {
+              "field": "Team",
+              "type": "nominal",
+              "title": "Team"
+            },
+            "tooltip": [
+              { "field": "Team", "title": "Team" },
+              {
+                "field": "AvgShots",
+                "title": "Avg Shots",
+                "format": ".2f"
+              },
+              {
+                "field": "AvgShotsOnTarget",
+                "title": "Avg Shots on Target",
+                "format": ".2f"
+              }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "hconcat": [
+        {
+          "title": "Discipline Heatmap: Cards by Team & Result",
+          "width": 380,
+          "height": 300,
+          "transform": [
+            {
+              "filter": "datum.Date >= startDate && datum.Date <= endDate"
+            },
+            {
+              "filter": "teamParam == 'All' || datum.Team == teamParam"
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "sum",
+                  "field": "Yellows",
+                  "as": "TotalYellows"
+                },
+                {
+                  "op": "sum",
+                  "field": "Reds",
+                  "as": "TotalReds"
+                },
+                {
+                  "op": "sum",
+                  "field": "TotalCards",
+                  "as": "TotalCards"
+                }
+              ],
+              "groupby": ["Team", "TeamResult"]
+            }
+          ],
+          "mark": "rect",
+          "encoding": {
+            "x": {
+              "field": "TeamResult",
+              "type": "nominal",
+              "title": "Match Result",
+              "sort": ["Win", "Draw", "Loss"]
+            },
+            "y": {
+              "field": "Team",
+              "type": "nominal",
+              "title": "Team",
+              "sort": "-x"
+            },
+            "color": {
+              "field": "TotalCards",
+              "type": "quantitative",
+              "title": "Total Cards (Y + R)"
+            },
+            "tooltip": [
+              { "field": "Team", "title": "Team" },
+              { "field": "TeamResult", "title": "Result" },
+              { "field": "TotalYellows", "title": "Yellow Cards" },
+              { "field": "TotalReds", "title": "Red Cards" },
+              { "field": "TotalCards", "title": "Total Cards" }
+            ]
+          }
+        },
+
+        {
+          "title": "Home vs Away Goals per Team",
+          "width": 380,
+          "height": 300,
+          "transform": [
+            {
+              "filter": "datum.Date >= startDate && datum.Date <= endDate"
+            },
+            {
+              "filter": "teamParam == 'All' || datum.Team == teamParam"
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "mean",
+                  "field": "Goals",
+                  "as": "AvgGoals"
+                }
+              ],
+              "groupby": ["Team", "IsHome"]
+            }
+          ],
+          "mark": "bar",
+          "encoding": {
+            "x": {
+              "field": "Team",
+              "type": "nominal",
+              "title": "Team",
+              "sort": "-y"
+            },
+            "xOffset": {
+              "field": "IsHome",
+              "type": "nominal"
+            },
+            "y": {
+              "field": "AvgGoals",
+              "type": "quantitative",
+              "title": "Average Goals per Match"
+            },
+            "color": {
+              "field": "IsHome",
+              "type": "nominal",
+              "title": "Venue",
+              "scale": {
+                "domain": [true, false],
+                "range": ["#1f77b4", "#ff7f0e"]
+              }
+            },
+            "tooltip": [
+              { "field": "Team", "title": "Team" },
+              {
+                "field": "IsHome",
+                "title": "Is Home?",
+                "format": ""
+              },
+              {
+                "field": "AvgGoals",
+                "title": "Avg Goals",
+                "format": ".2f"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+
+  "config": {
+    "view": { "stroke": null },
+    "legend": { "orient": "right" }
+  }
+}
